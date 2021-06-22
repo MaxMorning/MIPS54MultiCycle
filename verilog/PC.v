@@ -1,5 +1,6 @@
 module PC (
     input wire clk,
+    input wire we,
     input wire[31:0] pc_in,
     input wire reset,
 
@@ -10,7 +11,7 @@ module PC (
         if (reset) begin
             pc_out <= 32'h00400000;
         end
-        else begin
+        else if (we) begin
             pc_out <= pc_in;
         end
     end

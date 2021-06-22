@@ -33,7 +33,7 @@ A MIPS CPU without pipeline that support 54 basic instructions
     input wire[31:0] ir_in, // Src : RAM.rdata  
 
     output reg[31:0] ir_out
-### GPR
+### GPR(RegFile)
     input wire clk, // Src : clk
     input wire reset, // Src : reset
     input wire we, // Src : ctrl_gpr_we
@@ -61,7 +61,7 @@ A MIPS CPU without pipeline that support 54 basic instructions
     output wire[31:0] clzCalcResult
 ### multCalculate
     // 乘法可以在Decode阶段进行L/S指令地址预计算时并行预计算，此时需要进行的额外操作是gpr_raddr_select设置为IR.ir_out[20:16](rt)；Execute阶段空过一轮；Final Ops阶段时可以得到计算结果，写回HiLo即可
-    input wire signed, // Src : IR.ir_out[0]
+    input wire signed_mult, // Src : IR.ir_out[0]
     input wire[31:0] mult_a, // Src : GPR.rdata1(rs)
     input wire[31:0] mult_b, // Src : GPR.rdata2(rt)
 
@@ -70,7 +70,7 @@ A MIPS CPU without pipeline that support 54 basic instructions
 ### divCalculate
     input wire clk, // Src : clk
     input wire start, // Src : ctrl_div_start
-    input wire signed, // Src : IR.ir_out[0]
+    input wire signed_div, // Src : IR.ir_out[0]
     input wire[31:0] dividend, // Src : GPR.rdata1(rs)
     input wire[31:0] divisor, // Src : GPR.rdata2(rt)
     
@@ -88,14 +88,14 @@ A MIPS CPU without pipeline that support 54 basic instructions
     input wire we, // Src : ctrl_hi_we
     input wire[31:0] wdata, // Src : GPR.rdata1(rs) / multCalculate.multResultHi / divCalculate.r
 
-    output wire[31:0] rdata
+    output reg[31:0] rdata
 ### LO_reg
     input wire clk, // Src : clk
     input wire reset, // Src : reset
     input wire we, // Src : ctrl_lo_we
     input wire[31:0] wdata, // Src : GPR.rdata1(rs) / multCalculate.multResultLo / divCalculate.q
 
-    output wire[31:0] rdata
+    output reg[31:0] rdata
 ### CP0
     input wire clk, // Src : clk
     input wire rst, // Src : reset

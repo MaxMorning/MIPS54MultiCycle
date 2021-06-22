@@ -5,7 +5,8 @@ module ALU (
 
     output wire[31:0] ALUResult,
     output wire overflow,
-    output wire zero
+    output wire zero,
+    output wire negative
 );
 
     wire[32:0] extOpr1 = {opr1[31], opr1};
@@ -64,4 +65,5 @@ module ALU (
                             );
     assign overflow = ALUControl[3] | ALUControl[2] | ALUControl[0] ? 1'b0 : (ALUControl[1] ? subResult[32] ^ subResult[31] : addResult[32] ^ addResult[31]);
     assign zero = ~(| ALUResult);
+    assign negative = ~ALUControl[3] & ~ALUControl[2] & ALUResult[31];
 endmodule
