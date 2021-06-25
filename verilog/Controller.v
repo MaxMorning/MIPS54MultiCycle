@@ -9,7 +9,6 @@ module Controller (
     input wire div_ctrl_done, // Src : divCalulate.divDone
 
     output wire ctrl_ram_we,
-    output wire ctrl_bad_addr,
     output wire[3:0] ctrl_alu_ALUcontrol,
     output wire ctrl_pc_we,
     output wire ctrl_ir_we,
@@ -79,6 +78,7 @@ module Controller (
 
     reg[5:0] status_reg;
     wire[1:0] ram_mask;
+    wire ctrl_bad_addr;
 
     assign ram_mask = {2{~ir_ctrl_instr[31] | ir_ctrl_instr[30]}} | ir_ctrl_instr[27:26]
 

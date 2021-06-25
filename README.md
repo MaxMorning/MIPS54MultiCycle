@@ -1,5 +1,6 @@
 # MIPS54MultiCycle
-A MIPS CPU without pipeline that support 54 basic instructions
+A MIPS CPU without pipeline that support 54 basic instructions  
+__Internal Code__ : Beryllium
 ## Module Define
 ### RAM
     input wire clk, // Src : clk  
