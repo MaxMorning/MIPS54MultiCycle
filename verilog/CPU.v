@@ -11,15 +11,15 @@ module CPU (
 
     // RAM
     output wire cpu_ram_we,
-    output wire[31:0] cpu_ram_addr;
+    output wire[31:0] cpu_ram_addr,
     output wire[1:0] cpu_ram_mask,
     output wire cpu_ram_signed_ext,
     output wire[31:0] cpu_ram_wdata,
 
     // CP0
-    output wire cpu_cp0_rst;
-    output wire cpu_cp0_mfc0;
-    output wire cpu_cp0_mtc0;
+    output wire cpu_cp0_rst,
+    output wire cpu_cp0_mfc0,
+    output wire cpu_cp0_mtc0,
     output wire[31:0] cpu_cp0_pc,
     output wire[4:0] cpu_cp0_rd,
     output wire[31:0] cpu_cp0_wdata,
@@ -60,7 +60,6 @@ module CPU (
     wire[31:0] clz_calc_result;
 
     // Concatenate
-    wire[1:0] con_pc;
     wire[31:0] con_result;
 
     // divCalculate
@@ -170,18 +169,18 @@ module CPU (
 
     Concatenate concatenate_inst(
         .Jimm(ir_ir_out[25:0]),
-        .pc(con_pc),
+        .pc(pc_pc_out),
         .Jconcatenate(con_result)
     );
     
     Controller controller(
         .clk(clk),
         .reset(reset),
-        .ir_ctrl_instr(),
+        .ir_ctrl_instr(ir_ir_out),
         .alu_ctrl_overflow(alu_ctrl_overflow),
         .alu_ctrl_zero(alu_ctrl_zero),
         .alu_ctrl_negative(alu_ctrl_negative),
-        .alu_ctrl_ls_address(alu_result),
+        .alu_ctrl_ls_address(alu_result[1:0]),
         .div_ctrl_done(div_div_done),
 
         .ctrl_ram_we(ctrl_ram_we),

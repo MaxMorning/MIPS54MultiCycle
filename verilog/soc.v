@@ -28,6 +28,10 @@ module soc (
     wire cpu_cp0_eret;
     wire[4:0] cpu_cp0_cause;
 
+    assign ram_addr = cpu_ram_addr;
+    assign ram_data = ram_cpu_rdata;
+    assign cp0_exc_addr = cp0_cpu_exc_addr;
+
     RAM ram_inst(
         .clk(clk),
         .we(cpu_ram_we),
@@ -44,7 +48,7 @@ module soc (
         .ram_cpu_rdata(ram_cpu_rdata),
         .cp0_cpu_rdata(cp0_cpu_rdata),
         .cp0_cpu_status(cp0_cpu_status),
-        .cp0_exc_addr(cp0_exc_addr),
+        .cp0_cpu_exc_addr(cp0_cpu_exc_addr),
         .cpu_ram_we(cpu_ram_we),
         .cpu_ram_addr(cpu_ram_addr),
         .cpu_ram_mask(cpu_ram_mask),

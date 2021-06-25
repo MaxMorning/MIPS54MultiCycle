@@ -5,7 +5,7 @@ module Controller (
     input wire alu_ctrl_overflow, // Src : ALU.overflow
     input wire alu_ctrl_zero, // Src : ALU.zero
     input wire alu_ctrl_negative, // Src : ALU.negative
-    input wire[31:0] alu_ctrl_ls_address, // Src : ALU.ALUresult
+    input wire[1:0] alu_ctrl_ls_address, // Src : ALU.ALUresult[1:0]
     input wire div_ctrl_done, // Src : divCalulate.divDone
 
     output wire ctrl_ram_we,
@@ -80,19 +80,19 @@ module Controller (
     wire[1:0] ram_mask;
     wire ctrl_bad_addr;
 
-    assign ram_mask = {2{~ir_ctrl_instr[31] | ir_ctrl_instr[30]}} | ir_ctrl_instr[27:26]
+    assign ram_mask = {2{~ir_ctrl_instr[31] | ir_ctrl_instr[30]}} | ir_ctrl_instr[27:26];
 
-    assign ctrl_bad_addr = | (ram_mask & alu_ctrl_ls_address[1:0]);
+    assign ctrl_bad_addr = | (ram_mask & alu_ctrl_ls_address);
     assign ctrl_alu_ALUcontrol = (~status_reg[5] & ~status_reg[4] & ~status_reg[3] & ~status_reg[2] & ~status_reg[1]) ? 4'b0001 :
-                                     inst[31] ? 4'b0001  // Load / Store
+                                     ir_ctrl_instr[31] ? 4'b0001  // Load / Store
                                     :
-                                    inst[28] ? // 01xx
+                                    ir_ctrl_instr[28] ? // 01xx
                                         4'b0110 
                                         : // 00xx
-                                        (inst[27] ? // 001x
-                                            {2'b00, inst[27:26]} : // 000x
-                                            // (inst[26] ? 4'b1011 : 4'b1010) : //0011 jal   0010 j
-                                            (inst[26] ? 4'b0001 : {4{inst[5]}} ~^ {inst[3], inst[5] & inst[2], inst[4] | inst[1], inst[0]}) //0001 bgez   0000 R type & teq
+                                        (ir_ctrl_instr[27] ? // 001x
+                                            {2'b00, ir_ctrl_instr[27:26]} : // 000x
+                                            // (ir_ctrl_instr[26] ? 4'b1011 : 4'b1010) : //0011 jal   0010 j
+                                            (ir_ctrl_instr[26] ? 4'b0001 : {4{ir_ctrl_instr[5]}} ~^ {ir_ctrl_instr[3], ir_ctrl_instr[5] & ir_ctrl_instr[2], ir_ctrl_instr[4] | ir_ctrl_instr[1], ir_ctrl_instr[0]}) //0001 bgez   0000 R type & teq
                                         );
 
 
@@ -414,13 +414,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ram_addr_select_pc;
-                    alu_opr1_select <= alu_opr1_select_pc;
-                    alu_opr2_select <= alu_opr2_select_const_4;
+                    opr1_select <= alu_opr1_select_pc;
+                    opr2_select <= alu_opr2_select_const_4;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end 
             
             sDecode:
@@ -440,13 +440,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ram_addr_select_pc;
-                    alu_opr1_select <= alu_opr1_select_gpr_rdata1;
-                    alu_opr2_select <= alu_opr2_select_extResult;
+                    opr1_select <= alu_opr1_select_gpr_rdata1;
+                    opr2_select <= alu_opr2_select_extResult;
                     pc_in_select <= pc_in_select_alu;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sALregExe:
@@ -466,13 +466,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= alu_opr1_select_gpr_rdata1;
-                    alu_opr2_select <= alu_opr2_select_gpr_rdata2;
+                    opr1_select <= alu_opr1_select_gpr_rdata1;
+                    opr2_select <= alu_opr2_select_gpr_rdata2;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sALregWB:
@@ -492,13 +492,13 @@ module Controller (
                     cp0_cause <= 5'b01100;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= alu_opr1_select_gpr_rdata1;
-                    alu_opr2_select <= alu_opr2_select_gpr_rdata2;
+                    opr1_select <= alu_opr1_select_gpr_rdata1;
+                    opr2_select <= alu_opr2_select_gpr_rdata2;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= gpr_waddr_select_ir_1511;
-                    gpr_wdata_select <= gpr_wdata_select_alu;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= gpr_waddr_select_ir_1511;
+                    reg_gpr_wdata_select <= gpr_wdata_select_alu;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sShamtShiftExe:
@@ -518,13 +518,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= alu_opr1_select_gpr_rdata1;
-                    alu_opr2_select <= alu_opr2_select_extResult;
+                    opr1_select <= alu_opr1_select_gpr_rdata1;
+                    opr2_select <= alu_opr2_select_extResult;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 2'bxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 2'bxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sShamtShiftWB:
@@ -544,13 +544,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= alu_opr1_select_gpr_rdata1;
-                    alu_opr2_select <= alu_opr2_select_extResult;
+                    opr1_select <= alu_opr1_select_gpr_rdata1;
+                    opr2_select <= alu_opr2_select_extResult;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= gpr_waddr_select_ir_1511;
-                    gpr_wdata_select <= gpr_wdata_select_alu;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= gpr_waddr_select_ir_1511;
+                    reg_gpr_wdata_select <= gpr_wdata_select_alu;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sVarShiftExe:
@@ -570,13 +570,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= alu_opr1_select_gpr_rdata2;
-                    alu_opr2_select <= alu_opr2_select_gpr_rdata1;
+                    opr1_select <= alu_opr1_select_gpr_rdata2;
+                    opr2_select <= alu_opr2_select_gpr_rdata1;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sVarShiftWB:
@@ -596,13 +596,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= alu_opr1_select_gpr_rdata2;
-                    alu_opr2_select <= alu_opr2_select_gpr_rdata2;
+                    opr1_select <= alu_opr1_select_gpr_rdata2;
+                    opr2_select <= alu_opr2_select_gpr_rdata2;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= gpr_waddr_select_ir_1511;
-                    gpr_wdata_select <= gpr_wdata_select_alu;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= gpr_waddr_select_ir_1511;
+                    reg_gpr_wdata_select <= gpr_wdata_select_alu;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sALimmExe:
@@ -622,13 +622,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= alu_opr1_select_gpr_rdata1;
-                    alu_opr2_select <= alu_opr2_select_extResult;
+                    opr1_select <= alu_opr1_select_gpr_rdata1;
+                    opr2_select <= alu_opr2_select_extResult;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 2'bxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 2'bxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sALimmWB:
@@ -648,13 +648,13 @@ module Controller (
                     cp0_cause <= 5'b01100;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= alu_opr1_select_gpr_rdata1;
-                    alu_opr2_select <= alu_opr2_select_extResult;
+                    opr1_select <= alu_opr1_select_gpr_rdata1;
+                    opr2_select <= alu_opr2_select_extResult;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= gpr_waddr_select_ir_1511;
-                    gpr_wdata_select <= gpr_wdata_select_alu;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= gpr_waddr_select_ir_1511;
+                    reg_gpr_wdata_select <= gpr_wdata_select_alu;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
             
             sClz:
@@ -674,13 +674,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= 2'bxx;
-                    alu_opr2_select <= 2'bxx;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= gpr_waddr_select_ir_1511;
-                    gpr_wdata_select <= gpr_wdata_select_clz;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= gpr_waddr_select_ir_1511;
+                    reg_gpr_wdata_select <= gpr_wdata_select_clz;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sMulExe:
@@ -700,13 +700,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= 2'bxx;
-                    alu_opr2_select <= 2'bxx;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sMulWB:
@@ -726,13 +726,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= 2'bxx;
-                    alu_opr2_select <= 2'bxx;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= hi_wdata_select_mult;
-                    lo_reg_wdata_select <= lo_wdata_select_mult;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= hi_wdata_select_mult;
+                    reg_lo_reg_wdata_select <= lo_wdata_select_mult;
                 end
 
             sDivStart:
@@ -752,13 +752,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= 2'bxx;
-                    alu_opr2_select <= 2'bxx;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sDivExe:
@@ -778,13 +778,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= 2'bxx;
-                    alu_opr2_select <= 2'bxx;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sDivWB:
@@ -804,13 +804,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= 2'bxx;
-                    alu_opr2_select <= 2'bxx;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= hi_wdata_select_div;
-                    lo_reg_wdata_select <= lo_wdata_select_div;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= hi_wdata_select_div;
+                    reg_lo_reg_wdata_select <= lo_wdata_select_div;
                 end
 
             sBeqExe:
@@ -830,13 +830,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= alu_opr1_select_gpr_rdata1;
-                    alu_opr2_select <= alu_opr2_select_gpr_rdata2;
+                    opr1_select <= alu_opr1_select_gpr_rdata1;
+                    opr2_select <= alu_opr2_select_gpr_rdata2;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sBeqWB:
@@ -856,13 +856,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= alu_opr1_select_gpr_rdata1;
-                    alu_opr2_select <= alu_opr2_select_gpr_rdata2;
+                    opr1_select <= alu_opr1_select_gpr_rdata1;
+                    opr2_select <= alu_opr2_select_gpr_rdata2;
                     pc_in_select <= pc_in_select_branchCalcResult;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sBgezExe:
@@ -882,13 +882,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= alu_opr1_select_const_0;
-                    alu_opr2_select <= alu_opr2_select_gpr_rdata1;
+                    opr1_select <= alu_opr1_select_const_0;
+                    opr2_select <= alu_opr2_select_gpr_rdata1;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sBgezWB:
@@ -908,13 +908,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= alu_opr1_select_const_0;
-                    alu_opr2_select <= alu_opr2_select_gpr_rdata1;
+                    opr1_select <= alu_opr1_select_const_0;
+                    opr2_select <= alu_opr2_select_gpr_rdata1;
                     pc_in_select <= pc_in_select_branchCalcResult;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sJump:
@@ -934,13 +934,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= 2'bxx;
-                    alu_opr2_select <= 2'bxx;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
                     pc_in_select <= pc_in_select_concatResult;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sJAL:
@@ -960,13 +960,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= 2'bxx;
-                    alu_opr2_select <= 2'bxx;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
                     pc_in_select <= pc_in_select_concatResult;
-                    gpr_waddr_select <= gpr_waddr_select_const_31;
-                    gpr_wdata_select <= gpr_wdata_select_pc;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= gpr_waddr_select_const_31;
+                    reg_gpr_wdata_select <= gpr_wdata_select_pc;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sJR:
@@ -986,13 +986,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= 2'bxx;
-                    alu_opr2_select <= 2'bxx;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
                     pc_in_select <= pc_in_select_gpr_rdata1;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sJALR:
@@ -1012,13 +1012,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= 2'bxx;
-                    alu_opr2_select <= 2'bxx;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
                     pc_in_select <= pc_in_select_gpr_rdata1;
-                    gpr_waddr_select <= gpr_waddr_select_const_31;
-                    gpr_wdata_select <= gpr_wdata_select_pc;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= gpr_waddr_select_const_31;
+                    reg_gpr_wdata_select <= gpr_wdata_select_pc;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sLoadMem:
@@ -1038,13 +1038,13 @@ module Controller (
                     cp0_cause <= 5'b00100;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= alu_opr1_select_gpr_rdata1;
-                    alu_opr2_select <= alu_opr2_select_extResult;
+                    opr1_select <= alu_opr1_select_gpr_rdata1;
+                    opr2_select <= alu_opr2_select_extResult;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sLoadWB:
@@ -1064,13 +1064,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ram_addr_select_pc;
-                    alu_opr1_select <= alu_opr1_select_gpr_rdata1;
-                    alu_opr2_select <= alu_opr2_select_extResult;
+                    opr1_select <= alu_opr1_select_gpr_rdata1;
+                    opr2_select <= alu_opr2_select_extResult;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= gpr_waddr_select_ir_2016;
-                    gpr_wdata_select <= gpr_wdata_select_ram;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= gpr_waddr_select_ir_2016;
+                    reg_gpr_wdata_select <= gpr_wdata_select_ram;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sStoreMem:
@@ -1090,13 +1090,13 @@ module Controller (
                     cp0_cause <= 5'b00101;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= alu_opr1_select_gpr_rdata1;
-                    alu_opr2_select <= alu_opr2_select_extResult;
+                    opr1_select <= alu_opr1_select_gpr_rdata1;
+                    opr2_select <= alu_opr2_select_extResult;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
             
             sStoreWB:
@@ -1116,13 +1116,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ram_addr_select_pc;
-                    alu_opr1_select <= 2'bxx;
-                    alu_opr2_select <= 2'bxx;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
             
             sMFC0Ask:
@@ -1142,13 +1142,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= 2'bxx;
-                    alu_opr2_select <= 2'bxx;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sMFC0Get:
@@ -1168,13 +1168,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= 2'bxx;
-                    alu_opr2_select <= 2'bxx;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= gpr_waddr_select_ir_2016;
-                    gpr_wdata_select <= gpr_wdata_select_cp0;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= gpr_waddr_select_ir_2016;
+                    reg_gpr_wdata_select <= gpr_wdata_select_cp0;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sMFHI:
@@ -1194,13 +1194,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= 2'bxx;
-                    alu_opr2_select <= 2'bxx;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= gpr_waddr_select_ir_1511;
-                    gpr_wdata_select <= gpr_wdata_select_hi;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= gpr_waddr_select_ir_1511;
+                    reg_gpr_wdata_select <= gpr_wdata_select_hi;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sMFLO:
@@ -1220,13 +1220,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= 2'bxx;
-                    alu_opr2_select <= 2'bxx;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= gpr_waddr_select_ir_1511;
-                    gpr_wdata_select <= gpr_wdata_select_lo;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= gpr_waddr_select_ir_1511;
+                    reg_gpr_wdata_select <= gpr_wdata_select_lo;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
             
             sMTC0:
@@ -1246,13 +1246,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= 2'bxx;
-                    alu_opr2_select <= 2'bxx;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sMTHI:
@@ -1272,13 +1272,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= 2'bxx;
-                    alu_opr2_select <= 2'bxx;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= hi_wdata_select_gpr;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= hi_wdata_select_gpr;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sMTLO:
@@ -1298,13 +1298,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= 2'bxx;
-                    alu_opr2_select <= 2'bxx;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= lo_wdata_select_gpr;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= lo_wdata_select_gpr;
                 end
 
             sSyscall:
@@ -1324,13 +1324,13 @@ module Controller (
                     cp0_cause <= 5'b01000;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= 2'bxx;
-                    alu_opr2_select <= 2'bxx;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sEret:
@@ -1350,13 +1350,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= 2'bxx;
-                    alu_opr2_select <= 2'bxx;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sTeqExe:
@@ -1376,13 +1376,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= alu_opr1_select_gpr_rdata1;
-                    alu_opr2_select <= alu_opr2_select_gpr_rdata2;
+                    opr1_select <= alu_opr1_select_gpr_rdata1;
+                    opr2_select <= alu_opr2_select_gpr_rdata2;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sTeqWB:
@@ -1402,13 +1402,13 @@ module Controller (
                     cp0_cause <= 5'b01101;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= 2'bxx;
-                    alu_opr2_select <= 2'bxx;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sBreak:
@@ -1428,13 +1428,13 @@ module Controller (
                     cp0_cause <= 5'b01001;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= 2'bxx;
-                    alu_opr2_select <= 2'bxx;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
                     pc_in_select <= 3'bxxx;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
 
             sException:
@@ -1454,13 +1454,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= 2'bxx;
-                    alu_opr2_select <= 2'bxx;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
                     pc_in_select <= pc_in_select_cp0_exc_addr;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
             default: 
                 begin
@@ -1479,13 +1479,13 @@ module Controller (
                     cp0_cause <= 5'bxxxxx;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    alu_opr1_select <= 2'bxx;
-                    alu_opr2_select <= 2'bxx;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
                     pc_in_select <= pc_in_select_cp0_exc_addr;
-                    gpr_waddr_select <= 2'bxx;
-                    gpr_wdata_select <= 3'bxxx;
-                    hi_reg_wdata_select <= 2'bxx;
-                    lo_reg_wdata_select <= 2'bxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
                 end
         endcase
     end
