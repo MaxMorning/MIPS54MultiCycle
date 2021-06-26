@@ -400,7 +400,7 @@ module Controller (
             sFetch:
                 begin
                     ram_we <= 0;
-                    pc_we <= 0;
+                    pc_we <= 1;
                     ir_we <= 1;
                     gpr_we <= 0;
                     immext_select <= 2'bxx;
@@ -426,7 +426,7 @@ module Controller (
             sDecode:
                 begin
                     ram_we <= 0;
-                    pc_we <= 1;
+                    pc_we <= 0;
                     ir_we <= 0;
                     gpr_we <= 0;
                     immext_select <= 2'b01;
