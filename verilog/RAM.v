@@ -8,22 +8,22 @@ module RAM (
 
     output wire[31:0] rdata
 );
-    reg[7:0] mem[1023:0];
-    wire[31:0] addr_1;
-    wire[31:0] addr_2;
-    wire[31:0] addr_3;
+    reg[31:0] mem[255:0];
+    // wire[31:0] addr_1;
+    // wire[31:0] addr_2;
+    // wire[31:0] addr_3;
 
-    assign addr_1 = addr + 1;
-    assign addr_2 = addr + 2;
-    assign addr_3 = addr + 3;
+    // assign addr_1 = addr + 1;
+    // assign addr_2 = addr + 2;
+    // assign addr_3 = addr + 3;
 
     assign rdata = mask[1] ? 
-                        {mem[addr_3[9:0]], mem[addr_2[9:0]], mem[addr_1[9:0]], mem[addr[9:0]]}
+                        mem[addr[9:2]]
                         :
                         (mask[0] ?
-                            {{16{mem[addr_1[9:0]][7] & signed_ext}}, mem[addr_1[9:0]], mem[addr[9:0]]}
+                            {{16{mem[addr[9:2]][{addr[1], 4'b1111}] & signed_ext}}, mem[addr[9:2]][{addr[1], 4'b1111} -: 16]}
                             :
-                            {{24{mem[addr[9:0]][7] & signed_ext}}, mem[addr[9:0]]}
+                            {{24{mem[addr[9:2]][{addr[1:0], 3'b111}] & signed_ext}}, mem[addr[9:2]][{addr[1:0], 3'b111} -: 8]}
                         )
                         ;
 
@@ -31,17 +31,13 @@ module RAM (
     always @(posedge clk) begin
         if (we) begin
             if (mask[1]) begin
-                mem[addr_3[9:0]] <= wdata[31:24];
-                mem[addr_2[9:0]] <= wdata[23:16];
-                mem[addr_1[9:0]] <= wdata[15:8];
-                mem[addr[9:0]] <= wdata[7:0];
+                mem[addr[9:2]] <= wdata;
             end
             else if (mask[0]) begin
-                mem[addr_1[9:0]] <= wdata[15:8];
-                mem[addr[9:0]] <= wdata[7:0];
+                mem[addr[9:2]][{addr[1], 4'b1111} -: 16] <= wdata[15:0];
             end
             else begin
-                mem[addr[9:0]] <= wdata[7:0];
+                mem[addr[9:2]][{addr[1:0], 3'b111} -: 8] <= wdata[7:0];
             end
         end
     end

@@ -96,6 +96,12 @@ module CPU (
     wire[1:0] hi_reg_wdata_select;
     wire[1:0] lo_reg_wdata_select;
 
+    wire ctrl_bad_addr;
+
+    assign cpu_ram_mask = {2{~ir_ir_out[31] | ir_ir_out[30] | ctrl_bad_addr}} | ir_ir_out[27:26];
+
+    assign cpu_ram_signed_ext = ir_ir_out[28];
+
     assign cpu_cp0_rst = reset;
     
     assign cpu_ram_addr = ram_addr_select ? alu_result: pc_pc_out;
@@ -184,6 +190,7 @@ module CPU (
         .div_ctrl_done(div_div_done),
 
         .ctrl_ram_we(ctrl_ram_we),
+        .ctrl_bad_addr(ctrl_bad_addr),
         .ctrl_alu_ALUcontrol(ctrl_alu_control),
         .ctrl_pc_we(ctrl_pc_we),
         .ctrl_ir_we(ctrl_ir_we),
@@ -198,14 +205,14 @@ module CPU (
         .ctrl_cp0_eret(cpu_cp0_eret),
         .ctrl_cp0_cause(cpu_cp0_cause),
 
-        .ram_addr_select(),
-        .alu_opr1_select(),
-        .alu_opr2_select(),
-        .pc_pc_in_select(),
-        .gpr_waddr_select(),
-        .gpr_wdata_select(),
-        .hi_reg_wdata_select(),
-        .lo_reg_wdata_select()
+        .ram_addr_select(ram_addr_select),
+        .alu_opr1_select(alu_opr1_select),
+        .alu_opr2_select(alu_opr2_select),
+        .pc_pc_in_select(pc_pc_in_select),
+        .gpr_waddr_select(gpr_waddr_select),
+        .gpr_wdata_select(gpr_wdata_select),
+        .hi_reg_wdata_select(hi_reg_wdata_select),
+        .lo_reg_wdata_select(lo_reg_wdata_select)
     );
 
     divCalculate divCalculate_inst(
