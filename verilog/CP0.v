@@ -25,7 +25,10 @@ module CP0 (
     always @(posedge clk or posedge rst) begin
         if (rst) begin
             for (i = 0; i < 32; i = i + 1) begin
-                reg_file[i] <= 32'h0;
+                if (i != 12)
+                    reg_file[i] <= 32'h0;
+                else
+                    reg_file[12] <= 32'h1;
             end
         end
         else if (exception) begin

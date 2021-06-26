@@ -103,6 +103,9 @@ module CPU (
     assign cpu_ram_signed_ext = ir_ir_out[28];
 
     assign cpu_cp0_rst = reset;
+    assign cpu_cp0_pc = pc_pc_out;
+    assign cpu_cp0_rd = ir_ir_out[15:10];
+    assign cpu_cp0_wdata = gpr_rdata2;
     
     assign cpu_ram_addr = ram_addr_select ? alu_result: pc_pc_out;
 
@@ -114,7 +117,7 @@ module CPU (
     assign alu_opr2 = alu_opr2_select[1] ?
                         (alu_opr2_select[0] ? 32'h4: gpr_rdata2)
                         :
-                        (alu_opr2_select[0] ? pc_pc_out: gpr_rdata1);
+                        (alu_opr2_select[0] ? ext_result: gpr_rdata1);
 
     assign pc_pc_in = pc_pc_in_select[2] ? cp0_cpu_exc_addr
                         :
@@ -276,7 +279,7 @@ module CPU (
         .reset(reset),
         .we(ctrl_gpr_we),
         .raddr1(ir_ir_out[25:21]),
-        .raddr2(ir_ir_out[25:21]),
+        .raddr2(ir_ir_out[20:16]),
         .waddr(gpr_waddr),
         .wdata(gpr_wdata),
         .rdata1(gpr_rdata1),

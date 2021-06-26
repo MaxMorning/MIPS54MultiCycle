@@ -76,6 +76,7 @@ module Controller (
     parameter sTeqWB            = 6'd38;
     parameter sBreak            = 6'd39;
     parameter sException        = 6'd63;
+    parameter sInit             = 6'd62;
 
     reg[5:0] status_reg;
     wire[1:0] ram_mask;
@@ -84,21 +85,40 @@ module Controller (
 
     assign ctrl_bad_addr = | (ram_mask & alu_ctrl_ls_address);
     assign ctrl_alu_ALUcontrol = (~status_reg[5] & ~status_reg[4] & ~status_reg[3] & ~status_reg[2] & ~status_reg[1]) ? 4'b0001 :
-                                     ir_ctrl_instr[31] ? 4'b0001  // Load / Store
-                                    :
-                                    ir_ctrl_instr[28] ? // 01xx
-                                        4'b0110 
-                                        : // 00xx
-                                        (ir_ctrl_instr[27] ? // 001x
-                                            {2'b00, ir_ctrl_instr[27:26]} : // 000x
-                                            // (ir_ctrl_instr[26] ? 4'b1011 : 4'b1010) : //0011 jal   0010 j
-                                            (ir_ctrl_instr[26] ? 4'b0001 : {4{ir_ctrl_instr[5]}} ~^ {ir_ctrl_instr[3], ir_ctrl_instr[5] & ir_ctrl_instr[2], ir_ctrl_instr[4] | ir_ctrl_instr[1], ir_ctrl_instr[0]}) //0001 bgez   0000 R type & teq
-                                        );
+                                    (ir_ctrl_instr[31] ? 4'b0001  // Load / Store
+                                        :
+                                        (ir_ctrl_instr[29] ?
+                                            (ir_ctrl_instr[28] ? // 11xx
+                                                (ir_ctrl_instr[27] ? // 111x
+                                                    (ir_ctrl_instr[26] ? 4'b1110 : 4'b0110) 
+                                                    : //1111 lui   1110 xori
+                                                    {1'b0, ir_ctrl_instr[28:26]} //1101 ori   1100 andi
+                                                    // (inst[26] ? 4'b0101 : 4'b0100) //1101 ori   1100 andi
+                                                ) 
+                                                : // 10xx
+                                                {ir_ctrl_instr[27], ir_ctrl_instr[28:26]}
+                                                // (inst[27] ? 
+                                                //     (inst[26] ? 4'b1011 : 4'b1010) : //1011 sltiu    1010 slti
+                                                //     (inst[26] ? 4'b0001 : 4'b0000) //1001 addiu   1000 addi
+                                                // )
+                                            )
+                                            :
+                                            (ir_ctrl_instr[28] ? // 01xx
+                                                4'b0110 
+                                                : // 00xx
+                                                (ir_ctrl_instr[27] ? // 001x
+                                                    {2'b00, ir_ctrl_instr[27:26]} : // 000x
+                                                    // (ir_ctrl_instr[26] ? 4'b1011 : 4'b1010) : //0011 jal   0010 j
+                                                    (ir_ctrl_instr[26] ? 4'b0001 : {4{ir_ctrl_instr[5]}} ~^ {ir_ctrl_instr[3], ir_ctrl_instr[5] & ir_ctrl_instr[2], ir_ctrl_instr[4] | ir_ctrl_instr[1], ir_ctrl_instr[0]}) //0001 bgez   0000 R type & teq
+                                                )
+                                            )
+                                        )
+                                    );
 
 
     always @(posedge clk or posedge reset) begin
         if (reset) begin
-            status_reg <= 6'h00;
+            status_reg <= sInit;
         end
         else begin
             case (status_reg)
@@ -301,6 +321,9 @@ module Controller (
 
                 sException:
                     status_reg <= sFetch;
+
+                sInit:
+                    status_reg <= sFetch;
                 default:
                     status_reg <= sBreak;
             endcase
@@ -397,6 +420,31 @@ module Controller (
     
     always @(*) begin
         case (status_reg)
+            sInit:
+                begin
+                    ram_we <= 0;
+                    pc_we <= 0;
+                    ir_we <= 0;
+                    gpr_we <= 0;
+                    immext_select <= 2'bxx;
+                    div_start <= 0;
+                    hi_we <= 0;
+                    lo_we <= 0;
+                    cp0_mfc0 <= 0;
+                    cp0_mtc0 <= 0;
+                    cp0_exception <= 0;
+                    cp0_eret <= 0;
+                    cp0_cause <= 5'bxxxxx;
+
+                    addr_select <= ram_addr_select_pc;
+                    opr1_select <= alu_opr1_select_pc;
+                    opr2_select <= alu_opr2_select_const_4;
+                    pc_in_select <= 3'bxxx;
+                    reg_gpr_waddr_select <= 2'bxx;
+                    reg_gpr_wdata_select <= 3'bxxx;
+                    reg_hi_reg_wdata_select <= 2'bxx;
+                    reg_lo_reg_wdata_select <= 2'bxx;
+                end
             sFetch:
                 begin
                     ram_we <= 0;
@@ -416,7 +464,7 @@ module Controller (
                     addr_select <= ram_addr_select_pc;
                     opr1_select <= alu_opr1_select_pc;
                     opr2_select <= alu_opr2_select_const_4;
-                    pc_in_select <= 3'bxxx;
+                    pc_in_select <= pc_in_select_alu;
                     reg_gpr_waddr_select <= 2'bxx;
                     reg_gpr_wdata_select <= 3'bxxx;
                     reg_hi_reg_wdata_select <= 2'bxx;
@@ -442,7 +490,7 @@ module Controller (
                     addr_select <= ram_addr_select_pc;
                     opr1_select <= alu_opr1_select_gpr_rdata1;
                     opr2_select <= alu_opr2_select_extResult;
-                    pc_in_select <= pc_in_select_alu;
+                    pc_in_select <= 3'bxxx;
                     reg_gpr_waddr_select <= 2'bxx;
                     reg_gpr_wdata_select <= 3'bxxx;
                     reg_hi_reg_wdata_select <= 2'bxx;
@@ -651,7 +699,7 @@ module Controller (
                     opr1_select <= alu_opr1_select_gpr_rdata1;
                     opr2_select <= alu_opr2_select_extResult;
                     pc_in_select <= 3'bxxx;
-                    reg_gpr_waddr_select <= gpr_waddr_select_ir_1511;
+                    reg_gpr_waddr_select <= gpr_waddr_select_ir_2016;
                     reg_gpr_wdata_select <= gpr_wdata_select_alu;
                     reg_hi_reg_wdata_select <= 2'bxx;
                     reg_lo_reg_wdata_select <= 2'bxx;
