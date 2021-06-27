@@ -76,6 +76,7 @@ module Controller (
     parameter sTeqExe           = 6'd37;
     parameter sTeqWB            = 6'd38;
     parameter sBreak            = 6'd39;
+    parameter sMul3WB           = 6'd44;
     parameter sException        = 6'd63;
     parameter sInit             = 6'd62;
 
@@ -206,7 +207,7 @@ module Controller (
                                 status_reg <= sStoreMem;
 
                             6'b011100:
-                                status_reg <= sClz;
+                                status_reg <= ir_ctrl_instr[5] ? sClz : sMulExe;
 
                             6'b010000:
                                 status_reg <= ir_ctrl_instr[25] ? sEret : (ir_ctrl_instr[23] ? sMTC0 : sMFC0Ask);
@@ -242,7 +243,7 @@ module Controller (
                     status_reg <= sFetch;
 
                 sMulExe:
-                    status_reg <= sMulWB;
+                    status_reg <= {ir_ctrl_instr[30], 5'b01100};
                 sMulWB:
                     status_reg <= sFetch;
 
@@ -318,6 +319,9 @@ module Controller (
 
                 sBreak:
                     status_reg <= sException;
+
+                sMul3WB:
+                    status_reg <= sFetch;
 
                 sException:
                     status_reg <= sFetch;
@@ -409,6 +413,7 @@ module Controller (
     parameter gpr_wdata_select_hi = 3'b100;
     parameter gpr_wdata_select_lo = 3'b101;
     parameter gpr_wdata_select_clz = 3'b110;
+    parameter gpr_wdata_select_multLo = 3'b111;
 
     parameter hi_wdata_select_mult = 2'b00;
     parameter hi_wdata_select_div = 2'b01;
@@ -1483,6 +1488,32 @@ module Controller (
                     reg_gpr_wdata_select <= 3'bxxx;
                     reg_hi_reg_wdata_select <= 2'bxx;
                     reg_lo_reg_wdata_select <= 2'bxx;
+                end
+
+            sMul3WB:
+                begin
+                    ram_we <= 0;
+                    pc_we <= 0;
+                    ir_we <= 0;
+                    gpr_we <= 1;
+                    immext_select <= 2'bxx;
+                    div_start <= 0;
+                    hi_we <= 1;
+                    lo_we <= 1;
+                    cp0_mfc0 <= 0;
+                    cp0_mtc0 <= 0;
+                    cp0_exception <= 0;
+                    cp0_eret <= 0;
+                    cp0_cause <= 5'bxxxxx;
+
+                    addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
+                    opr1_select <= 2'bxx;
+                    opr2_select <= 2'bxx;
+                    pc_in_select <= 3'bxxx;
+                    reg_gpr_waddr_select <= gpr_waddr_select_ir_1511;
+                    reg_gpr_wdata_select <= gpr_wdata_select_multLo;
+                    reg_hi_reg_wdata_select <= hi_wdata_select_mult;
+                    reg_lo_reg_wdata_select <= lo_wdata_select_mult;
                 end
 
             sException:

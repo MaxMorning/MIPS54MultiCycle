@@ -135,7 +135,7 @@ module CPU (
 
     assign gpr_wdata = gpr_wdata_select[2] ?
                             (gpr_wdata_select[1] ? 
-                                clz_calc_result
+                                (gpr_wdata_select[0] ? multResultLo: clz_calc_result)
                                 :
                                 (gpr_wdata_select[0] ? lo_rdata: hi_rdata)
                             )
