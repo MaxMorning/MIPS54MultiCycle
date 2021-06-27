@@ -39,11 +39,12 @@ if __name__ == '__main__':
     os.system(r'vlog "RAM.v"')
     os.system(r'vlog "ImmExt.v"')
     os.system(r'vlog "PC.v"')
+    os.system(r'vlog "fake_pc.v"')
     os.system(r'vlog "RegFile.v"')
     os.system(r'vlog "IR.v"')
     os.system(r'vlog "multCalculate.v"')
     os.system(r'vlog "CPU.v"')
-    os.system(r'vlog "soc.v"')
+    os.system(r'vlog "sccomp_dataflow.v"')
     os.system(r'vlog "./tb/soc_tb.v"')
 
     print("Compile Done!")
@@ -84,9 +85,9 @@ if __name__ == '__main__':
                     index = 0
                     min_index = min(len(standard), len(result))
                     while index < min_index:
-                        if standard[index] == 'p':
-                            index += 12
-                            continue
+                        # if standard[index] == 'p':
+                        #     index += 12
+                        #     continue
 
                         if standard[index] != result[index]:
                             print(file_name, " Wrong!")

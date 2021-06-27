@@ -2,10 +2,9 @@
 module soc_tb();
     reg clk;
     reg reset;
-    wire[31:0] soc_ram_addr;
-    wire[31:0] soc_ram_data;
-    wire[31:0] soc_cp0_exc_addr;
-    reg[31:0] prev_instr;
+    wire[31:0] inst;
+    wire[31:0] pc;
+    reg[31:0] prev_pc;
 
     integer fout;
     integer i;
@@ -28,12 +27,11 @@ module soc_tb();
     // assign a_6 = soc_inst.ram_inst.mem[6];
     // assign a_7 = soc_inst.ram_inst.mem[7];
 
-    soc soc_inst(
-        .clk(clk),
+    sccomp_dataflow soc_inst(
+        .clk_in(clk),
         .reset(reset),
-        .ram_addr(soc_ram_addr),
-        .ram_data(soc_ram_data),
-        .cp0_exc_addr(soc_cp0_exc_addr)
+        .inst(inst),
+        .pc(pc)
     );
 
     initial begin
@@ -59,15 +57,15 @@ module soc_tb();
 
         #6;
         forever begin
-            if (prev_instr != soc_inst.cpu_inst.ir_inst.ir_out) begin
-                $fdisplay(fout, "pc: %h", soc_inst.cpu_inst.pc_inst.pc_out - 8);
-                $fdisplay(fout, "instr: %h", prev_instr);
+            if (prev_pc != pc) begin
+                $fdisplay(fout, "pc: %h", pc);
+                $fdisplay(fout, "instr: %h", inst);
 
                 for (i = 0; i < 32; i = i + 1) begin
-                    $fdisplay(fout, "regfile%d: %h", i, soc_inst.cpu_inst.reg_file.array_reg[i]);
+                    $fdisplay(fout, "regfile%d: %h", i, soc_inst.sccpu.cpu_ref.array_reg[i]);
                 end
 
-                prev_instr = soc_inst.cpu_inst.ir_inst.ir_out;
+                prev_pc = pc;
             end
             
             #10;

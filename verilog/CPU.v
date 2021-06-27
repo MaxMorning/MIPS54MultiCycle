@@ -25,7 +25,13 @@ module CPU (
     output wire[31:0] cpu_cp0_wdata,
     output wire cpu_cp0_exception,
     output wire cpu_cp0_eret,
-    output wire[4:0] cpu_cp0_cause
+    output wire[4:0] cpu_cp0_cause,
+
+    // fake PC
+    output wire[31:0] cpu_fake_pc,
+
+    // IR
+    output wire[31:0] cpu_ir_out
 );
 
     // ALU
@@ -156,6 +162,8 @@ module CPU (
                             :
                             (lo_reg_wdata_select[0] ? div_q: multResultLo);
     
+    assign cpu_ir_out = ir_ir_out;
+    
     ALU alu_inst(
         .opr1(alu_opr1),
         .opr2(alu_opr2),
@@ -276,7 +284,15 @@ module CPU (
         .pc_out(pc_pc_out)
     );
 
-    RegFile reg_file(
+    fake_PC fake_pc_inst(
+        .clk(clk),
+        .we(ctrl_ir_we),
+        .fake_pc_in(pc_pc_out),
+        .reset(reset),
+        .fake_pc_out(cpu_fake_pc)
+    );
+
+    RegFile cpu_ref(
         .clk(clk),
         .reset(reset),
         .we(ctrl_gpr_we),

@@ -1,10 +1,9 @@
-module soc (
-    input wire clk,
+module sccomp_dataflow (
+    input wire clk_in,
     input wire reset,
 
-    output wire[31:0] ram_addr,
-    output wire[31:0] ram_data,
-    output wire[31:0] cp0_exc_addr
+    output wire[31:0] inst,
+    output wire[31:0] pc
 );
 
     wire[31:0] ram_cpu_rdata;
@@ -28,12 +27,12 @@ module soc (
     wire cpu_cp0_eret;
     wire[4:0] cpu_cp0_cause;
 
-    assign ram_addr = cpu_ram_addr;
-    assign ram_data = ram_cpu_rdata;
-    assign cp0_exc_addr = cp0_cpu_exc_addr;
+    wire[31:0] cpu_fake_pc;
+
+    assign pc = cpu_fake_pc;
 
     RAM8 ram_inst(
-        .clk(clk),
+        .clk(clk_in),
         .we(cpu_ram_we),
         .addr(cpu_ram_addr),
         .mask(cpu_ram_mask),
@@ -42,8 +41,8 @@ module soc (
         .rdata(ram_cpu_rdata)
     );
 
-    CPU cpu_inst(
-        .clk(clk),
+    CPU sccpu(
+        .clk(clk_in),
         .reset(reset),
         .ram_cpu_rdata(ram_cpu_rdata),
         .cp0_cpu_rdata(cp0_cpu_rdata),
@@ -62,11 +61,13 @@ module soc (
         .cpu_cp0_wdata(cpu_cp0_wdata),
         .cpu_cp0_exception(cpu_cp0_exception),
         .cpu_cp0_eret(cpu_cp0_eret),
-        .cpu_cp0_cause(cpu_cp0_cause)
+        .cpu_cp0_cause(cpu_cp0_cause),
+        .cpu_fake_pc(cpu_fake_pc),
+        .cpu_ir_out(inst)
     );
 
     CP0 cp0_inst(
-        .clk(clk),
+        .clk(clk_in),
         .rst(reset),
         .mfc0(cpu_cp0_mfc0),
         .mtc0(cpu_cp0_mtc0),

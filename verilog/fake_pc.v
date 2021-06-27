@@ -1,18 +1,18 @@
-module PC (
+module fake_PC (
     input wire clk,
     input wire we,
-    input wire[31:0] pc_in,
+    input wire[31:0] fake_pc_in,
     input wire reset,
 
-    output reg[31:0] pc_out
+    output reg[31:0] fake_pc_out
 );
     
     always @(posedge clk or posedge reset) begin
         if (reset) begin
-            pc_out <= 32'h00000000;
+            fake_pc_out <= 32'h00000000;
         end
         else if (we) begin
-            pc_out <= pc_in;
+            fake_pc_out <= fake_pc_in;
         end
     end
 endmodule
