@@ -32,7 +32,7 @@ module soc (
     assign ram_data = ram_cpu_rdata;
     assign cp0_exc_addr = cp0_cpu_exc_addr;
 
-    RAM ram_inst(
+    RAM8 ram_inst(
         .clk(clk),
         .we(cpu_ram_we),
         .addr(cpu_ram_addr),

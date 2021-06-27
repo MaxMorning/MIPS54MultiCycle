@@ -6,6 +6,22 @@ mars_res_path = r"G:\FTP\TransTemp\MIPS54\MARSRES"
 workspace_path = r"G:\FTP\TransTemp\MIPS54\WORKSPACE"
 work_path = r"E:\digital\Project\MIPS54MultiCycle\verilog"
 
+def conv_8(file_path):
+    with open(file_path, 'r') as file_32:
+        cont_32 = file_32.readlines()
+
+        files = []
+        for i in range(4):
+            files.append(open(file_path[:-4] + '_' + str(i) + ".txt", 'w'))
+
+        for line_idx in range(0, len(cont_32)):
+            for i in range(4):
+                files[i].write(cont_32[line_idx][6 - 2 * i: 6 - 2 * i + 2] + '\n')
+
+        for file_8 in files:
+            file_8.close()
+
+
 if __name__ == '__main__':
     os.chdir(work_path)
     # compile
@@ -18,6 +34,8 @@ if __name__ == '__main__':
     os.system(r'vlog "divCalculate.v"')
     os.system(r'vlog "Hi_reg.v"')
     os.system(r'vlog "Lo_reg.v"')
+    os.system(r'vlog "mem8.v"')
+    os.system(r'vlog "RAM8.v"')
     os.system(r'vlog "RAM.v"')
     os.system(r'vlog "ImmExt.v"')
     os.system(r'vlog "PC.v"')
@@ -42,6 +60,8 @@ if __name__ == '__main__':
                     file_dst.write(file_content)
                     for i in range(256):
                         file_dst.write("00000000\n")
+
+                conv_8(os.path.join(workspace_path, "ram.txt"))
 
             # start simulation
             os.system(r'vsim -c -t 1ps -lib work soc_tb -do "run 7000ns;quit -sim;quit;"')
