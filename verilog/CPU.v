@@ -98,9 +98,9 @@ module CPU (
 
     wire ctrl_bad_addr;
 
-    assign cpu_ram_mask = {2{~ir_ir_out[31] | ir_ir_out[30] | ctrl_bad_addr}} | ir_ir_out[27:26];
+    // assign cpu_ram_mask = {2{~ir_ir_out[31] | ir_ir_out[30] | ctrl_bad_addr}} | ir_ir_out[27:26];
 
-    assign cpu_ram_signed_ext = ir_ir_out[28];
+    assign cpu_ram_signed_ext = ~ir_ir_out[28];
 
     assign cpu_cp0_rst = reset;
     assign cpu_cp0_pc = pc_pc_out;
@@ -108,6 +108,7 @@ module CPU (
     assign cpu_cp0_wdata = gpr_rdata2;
     
     assign cpu_ram_addr = ram_addr_select ? alu_result: pc_pc_out;
+    assign cpu_ram_wdata = gpr_rdata2;
 
     assign alu_opr1 = alu_opr1_select[1] ? 
                         (alu_opr1_select[0] ? 32'h0: gpr_rdata2)
@@ -128,7 +129,7 @@ module CPU (
                         );
 
     assign gpr_waddr = gpr_waddr_select[1] ? 
-                            5'h4
+                            5'd31
                             :
                             (gpr_waddr_select[0] ? ir_ir_out[20:16]: ir_ir_out[15:11]);
 
@@ -192,7 +193,8 @@ module CPU (
         .alu_ctrl_ls_address(alu_result[1:0]),
         .div_ctrl_done(div_div_done),
 
-        .ctrl_ram_we(ctrl_ram_we),
+        .ctrl_ram_we(cpu_ram_we),
+        .ctrl_ram_mask(cpu_ram_mask),
         .ctrl_bad_addr(ctrl_bad_addr),
         .ctrl_alu_ALUcontrol(ctrl_alu_control),
         .ctrl_pc_we(ctrl_pc_we),
@@ -221,7 +223,7 @@ module CPU (
     divCalculate divCalculate_inst(
         .clk(clk),
         .start(ctrl_div_start),
-        .signed_div(ir_ir_out[0]),
+        .signed_div(~ir_ir_out[0]),
         .dividend(gpr_rdata1),
         .divisor(gpr_rdata2),
         .q(div_q),
@@ -259,7 +261,7 @@ module CPU (
     );
 
     multCalculate multCalculate_inst(
-        .signed_mult(ir_ir_out[0]),
+        .signed_mult(~ir_ir_out[0]),
         .mult_a(gpr_rdata1),
         .mult_b(gpr_rdata2),
         .multResultHi(multResultHi),

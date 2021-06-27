@@ -5,5 +5,5 @@ module branchCalc (
     output wire[31:0] branchCalcResult
 );
     
-    assign branchCalcResult = pc_in + {16'h0000, offset};
+    assign branchCalcResult = pc_in + {{14{offset[15]}}, offset, 2'b00};
 endmodule

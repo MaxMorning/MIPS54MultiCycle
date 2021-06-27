@@ -3,10 +3,11 @@ module clzCalculate (
 
     output wire[31:0] clzCalcResult
 );
-    assign clzCalcResult[31:5] = 27'h0000;
-    assign clzCalcResult[4] = ~(| data_in[31:16]);
+    assign clzCalcResult[31:6] = 26'h0000;
+    assign clzCalcResult[5] = ~(| data_in);
+    assign clzCalcResult[4] = ~clzCalcResult[5] & ~(| data_in[31:16]);
     reg[3:0] clzResult;
-    assign clzCalcResult[3:0] = clzResult;
+    assign clzCalcResult[3:0] = {4{~clzCalcResult[5]}} & clzResult;
 
     always @ (*) begin
         if (clzCalcResult[4]) begin

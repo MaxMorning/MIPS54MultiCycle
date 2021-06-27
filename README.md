@@ -6,7 +6,7 @@ __Internal Code__ : Beryllium
     input wire clk, // Src : clk  
     input wire we, // Src : ctrl_ram_we
     input wire[31:0] addr, // Src : PC.pc_out / ALU.ALUresult
-    input wire[1:0] mask, // Src : IR.ir_out {2{~[31] | [30] | ctrl_bad_addr}} | [27:26] 
+    input wire[1:0] mask, // Src : ctrl_ram_mask 
     input wire signed_ext, // Src : IR.ir_out[28]
     // Notice : when exec lh inst, mask == 0011, signed_ext == 0, even if addr[1:0] == 10(not aligned in 32bit)
     input wire[31:0] wdata, // Src : GPR.rdata2(rt)  
@@ -62,7 +62,7 @@ __Internal Code__ : Beryllium
     output wire[31:0] clzCalcResult
 ### multCalculate
     // 乘法可以在Decode阶段进行L/S指令地址预计算时并行预计算，此时需要进行的额外操作是gpr_raddr_select设置为IR.ir_out[20:16](rt)；Execute阶段空过一轮；Final Ops阶段时可以得到计算结果，写回HiLo即可
-    input wire signed_mult, // Src : IR.ir_out[0]
+    input wire signed_mult, // Src : ~IR.ir_out[0]
     input wire[31:0] mult_a, // Src : GPR.rdata1(rs)
     input wire[31:0] mult_b, // Src : GPR.rdata2(rt)
 
@@ -71,7 +71,7 @@ __Internal Code__ : Beryllium
 ### divCalculate
     input wire clk, // Src : clk
     input wire start, // Src : ctrl_div_start
-    input wire signed_div, // Src : IR.ir_out[0]
+    input wire signed_div, // Src : ~IR.ir_out[0]
     input wire[31:0] dividend, // Src : GPR.rdata1(rs)
     input wire[31:0] divisor, // Src : GPR.rdata2(rt)
     
@@ -125,6 +125,7 @@ __Internal Code__ : Beryllium
     input wire div_ctrl_done, // Src : divCalulate.divDone
 
     output wire ctrl_ram_we,
+    output wire[1:0] ctrl_ram_mask,
     output wire ctrl_bad_addr,
     output wire[3:0] ctrl_alu_ALUcontrol, //  inst[31] ? 4'b0001  // Load / Store
                                                 :

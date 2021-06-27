@@ -5,6 +5,7 @@ module soc_tb();
     wire[31:0] soc_ram_addr;
     wire[31:0] soc_ram_data;
     wire[31:0] soc_cp0_exc_addr;
+    reg[31:0] prev_instr;
 
     integer fout;
     integer i;
@@ -44,21 +45,27 @@ module soc_tb();
 
     initial begin
 //        $readmemh("G:/FTP/TransTemp/MIPS31/WORKSPACE/instr.txt", soc.iram_inst.inst_array);
-        $readmemh("G:/FTP/TransTemp/MIPS54/ram.txt", soc_inst.ram_inst.mem);
+        $readmemh("G:/FTP/TransTemp/MIPS54/WORKSPACE/ram.txt", soc_inst.ram_inst.mem);
         fout = $fopen("G:/FTP/TransTemp/MIPS54/WORKSPACE/result.txt", "w+");
         reset = 1;
+
+        prev_instr = 32'h0;
         #6
         reset = 0;
 
         #6;
         forever begin
-            
-            $fdisplay(fout, "pc: %h", soc_inst.cpu_inst.pc_inst.pc_out);
-            $fdisplay(fout, "instr: %h", soc_inst.cpu_inst.ir_inst.ir_out);
+            if (prev_instr != soc_inst.cpu_inst.ir_inst.ir_out) begin
+                $fdisplay(fout, "pc: %h", soc_inst.cpu_inst.pc_inst.pc_out - 8);
+                $fdisplay(fout, "instr: %h", prev_instr);
 
-            for (i = 0; i < 32; i = i + 1) begin
-                $fdisplay(fout, "regfile%d: %h", i, soc_inst.cpu_inst.reg_file.array_reg[i]);
+                for (i = 0; i < 32; i = i + 1) begin
+                    $fdisplay(fout, "regfile%d: %h", i, soc_inst.cpu_inst.reg_file.array_reg[i]);
+                end
+
+                prev_instr = soc_inst.cpu_inst.ir_inst.ir_out;
             end
+            
             #10;
             
         end

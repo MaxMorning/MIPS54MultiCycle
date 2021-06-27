@@ -31,10 +31,10 @@ module divCalculate (
     always @(posedge clk) begin
         if (start) begin
             busy <= 1'b1;
-            reg_q <= dividend[31] ? ~dividend + 1 : dividend;
+            reg_q <= signed_div & dividend[31] ? ~dividend + 1 : dividend;
             r_signal <= dividend[31] & signed_div;
             reg_r <= 32'h0;
-            reg_b <= divisor[31] ? ~divisor + 1 : divisor;
+            reg_b <= signed_div & divisor[31] ? ~divisor + 1 : divisor;
             q_signal <= (divisor[31] ^ dividend[31]) & signed_div;
             r_sign <= 1'b0;
             cnt <= 1'b0;
