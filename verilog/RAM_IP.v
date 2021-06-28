@@ -10,8 +10,8 @@ module RAM (
     mem mem_inst(
         .clk(clk),
         .we(we),
-        .a(addr[12:2]),
-        .dpra(addr[12:2]),
+        .a({addr[31], addr[12:2]}),
+        .dpra({addr[31], addr[12:2]}),
         .dpo(rdata),
         .d(wdata)
     );
