@@ -6,10 +6,8 @@ __Internal Code__ : Beryllium
     input wire clk, // Src : clk  
     input wire we, // Src : ctrl_ram_we
     input wire[31:0] addr, // Src : PC.pc_out / ALU.ALUresult
-    input wire[1:0] mask, // Src : ctrl_ram_mask 
-    input wire signed_ext, // Src : IR.ir_out[28]
     // Notice : when exec lh inst, mask == 0011, signed_ext == 0, even if addr[1:0] == 10(not aligned in 32bit)
-    input wire[31:0] wdata, // Src : GPR.rdata2(rt)  
+    input wire[31:0] wdata, // Src : RamStoreProc.data_out  
 
     output wire[31:0] rdata
 ### ALU
@@ -41,7 +39,7 @@ __Internal Code__ : Beryllium
     input wire[4:0] raddr1, // Src : IR.ir_out[25:21](rs)
     input wire[4:0] raddr2, // Src : IR.ir_out[20:16](rt)
     input wire[4:0] waddr, // Src : 31 / IR.ir_out[20:16](rt) / IR.ir_out[15:11](rd)
-    input wire[31:0] wdata, // Src : PC / HI_reg.rdata / LO_reg.rdata / CP0.rdata / ALUresult / clzCalcResult / RAM.rdata
+    input wire[31:0] wdata, // Src : PC / HI_reg.rdata / LO_reg.rdata / CP0.rdata / ALUresult / clzCalcResult / RamLoadProc.rdata
 
     output wire[31:0] rdata1,
     output wire[31:0] rdata2
@@ -114,6 +112,23 @@ __Internal Code__ : Beryllium
     output wire[31:0] status, 
     output reg timer_int, 
     output wire[31:0] exc_addr
+
+### RamStoreProc
+    input wire[31:0] ram_data_in, // Src : RAM.rdata
+    input wire[31:0] gpr_data_in, // Src : GPR.rdata2(rt)
+    input wire[1:0] addr, // Src : ALU.ALUresult[1:0]
+    input wire[1:0] mask, // Src : ctrl_ram_mask
+
+    output wire[31:0] data_out
+
+### RamLoadProc
+    input wire[31:0] ram_data_in, // Src : RAM.rdata
+    input wire[1:0] addr, // Src : ALU.ALUresult[1:0]
+    input wire[1:0] mask, // Src : ctrl_ram_mask
+    input wire signed_ext, // Src : IR.ir_out[0]
+
+    output wire[31:0] data_out
+
 ### Controller
     input wire clk, // Src : clk
     input wire reset, // Src : reset

@@ -13,8 +13,6 @@ module sccomp_dataflow (
 
     wire cpu_ram_we;
     wire[31:0] cpu_ram_addr;
-    wire[1:0] cpu_ram_mask;
-    wire cpu_ram_signed_ext;
     wire[31:0] cpu_ram_wdata;
 
     wire cpu_cp0_rst;
@@ -31,12 +29,10 @@ module sccomp_dataflow (
 
     assign pc = cpu_fake_pc;
 
-    RAM8 ram_inst(
+    RAM ram_inst(
         .clk(clk_in),
         .we(cpu_ram_we),
         .addr(cpu_ram_addr),
-        .mask(cpu_ram_mask),
-        .signed_ext(cpu_ram_signed_ext),
         .wdata(cpu_ram_wdata),
         .rdata(ram_cpu_rdata)
     );
@@ -50,8 +46,6 @@ module sccomp_dataflow (
         .cp0_cpu_exc_addr(cp0_cpu_exc_addr),
         .cpu_ram_we(cpu_ram_we),
         .cpu_ram_addr(cpu_ram_addr),
-        .cpu_ram_mask(cpu_ram_mask),
-        .cpu_ram_signed_ext(cpu_ram_signed_ext),
         .cpu_ram_wdata(cpu_ram_wdata),
         .cpu_cp0_rst(cpu_cp0_rst),
         .cpu_cp0_mfc0(cpu_cp0_mfc0),
@@ -71,7 +65,7 @@ module sccomp_dataflow (
         .rst(reset),
         .mfc0(cpu_cp0_mfc0),
         .mtc0(cpu_cp0_mtc0),
-        .pc(cpu_cp0_pc),
+        .pc(cpu_fake_pc),
         .Rd(cpu_cp0_rd),
         .wdata(cpu_cp0_wdata),
         .exception(cpu_cp0_exception),
@@ -79,7 +73,10 @@ module sccomp_dataflow (
         .cause(cpu_cp0_cause),
         .rdata(cp0_cpu_rdata),
         .status(cp0_cpu_status),
-        .exc_addr(cp0_cpu_exc_addr)
+        .exc_addr(cp0_cpu_exc_addr),
+
+        .intr(),
+        .timer_int()
     );
     
 endmodule

@@ -82,7 +82,7 @@ module Controller (
 
     reg[5:0] status_reg;
 
-    assign ctrl_ram_mask = {2{~ir_ctrl_instr[31] | ir_ctrl_instr[30] | status_reg[5] | ~status_reg[4] | ~status_reg[3] | status_reg[2] | status_reg[0]}} | ir_ctrl_instr[27:26];
+    assign ctrl_ram_mask = {2{~ir_ctrl_instr[31] | ir_ctrl_instr[30] | status_reg[5] | ~status_reg[4] | ~status_reg[3] | status_reg[2]}} | ir_ctrl_instr[27:26];
 
     assign ctrl_bad_addr = | (ctrl_ram_mask & alu_ctrl_ls_address);
     assign ctrl_alu_ALUcontrol = (~status_reg[5] & ~status_reg[4] & ~status_reg[3] & ~status_reg[2] & ~status_reg[1]) ? 4'b0001 :
@@ -1090,7 +1090,7 @@ module Controller (
                     cp0_eret <= 0;
                     cp0_cause <= 5'b00100;
 
-                    addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
+                    addr_select <= ram_addr_select_alu;
                     opr1_select <= alu_opr1_select_gpr_rdata1;
                     opr2_select <= alu_opr2_select_extResult;
                     pc_in_select <= 3'bxxx;
@@ -1128,7 +1128,7 @@ module Controller (
 
             sStoreMem:
                 begin
-                    ram_we <= ~ctrl_bad_addr;
+                    ram_we <= 0;
                     pc_we <= 0;
                     ir_we <= 0;
                     gpr_we <= 0;
@@ -1142,7 +1142,7 @@ module Controller (
                     cp0_eret <= 0;
                     cp0_cause <= 5'b00101;
 
-                    addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
+                    addr_select <= ram_addr_select_alu;
                     opr1_select <= alu_opr1_select_gpr_rdata1;
                     opr2_select <= alu_opr2_select_extResult;
                     pc_in_select <= 3'bxxx;
@@ -1154,11 +1154,11 @@ module Controller (
             
             sStoreWB:
                 begin
-                    ram_we <= 0;
+                    ram_we <= 1;
                     pc_we <= 0;
                     ir_we <= 0;
                     gpr_we <= 0;
-                    immext_select <= 2'bxx;
+                    immext_select <= 2'b01;
                     div_start <= 0;
                     hi_we <= 0;
                     lo_we <= 0;
@@ -1168,9 +1168,9 @@ module Controller (
                     cp0_eret <= 0;
                     cp0_cause <= 5'bxxxxx;
 
-                    addr_select <= ram_addr_select_pc;
-                    opr1_select <= 2'bxx;
-                    opr2_select <= 2'bxx;
+                    addr_select <= ram_addr_select_alu;
+                    opr1_select <= alu_opr1_select_gpr_rdata1;
+                    opr2_select <= alu_opr2_select_extResult;
                     pc_in_select <= 3'bxxx;
                     reg_gpr_waddr_select <= 2'bxx;
                     reg_gpr_wdata_select <= 3'bxxx;

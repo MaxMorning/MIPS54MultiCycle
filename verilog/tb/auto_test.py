@@ -43,6 +43,8 @@ if __name__ == '__main__':
     os.system(r'vlog "RegFile.v"')
     os.system(r'vlog "IR.v"')
     os.system(r'vlog "multCalculate.v"')
+    os.system(r'vlog "RamLoadProc.v"')
+    os.system(r'vlog "RamStoreProc.v"')
     os.system(r'vlog "CPU.v"')
     os.system(r'vlog "sccomp_dataflow.v"')
     os.system(r'vlog "./tb/soc_tb.v"')
@@ -62,7 +64,7 @@ if __name__ == '__main__':
                     for i in range(256):
                         file_dst.write("00000000\n")
 
-                conv_8(os.path.join(workspace_path, "ram.txt"))
+                # conv_8(os.path.join(workspace_path, "ram.txt"))
 
             # start simulation
             os.system(r'vsim -c -t 1ps -lib work soc_tb -do "run 7000ns;quit -sim;quit;"')
@@ -85,9 +87,9 @@ if __name__ == '__main__':
                     index = 0
                     min_index = min(len(standard), len(result))
                     while index < min_index:
-                        # if standard[index] == 'p':
-                        #     index += 12
-                        #     continue
+                        if standard[index] == 'p':
+                            index += 12
+                            continue
 
                         if standard[index] != result[index]:
                             print(file_name, " Wrong!")

@@ -7,7 +7,7 @@ if __name__ == '__main__':
 
         files = []
         for i in range(4):
-            files.append(open(file_path[:-4] + '_' + str(i) + ".coe", 'w'))
+            files.append(open(file_path[:-4] + '_' + str(i) + file_path[-4:], 'w'))
 
         start_idx = 0
         if cont_32[0][0] == 'm':

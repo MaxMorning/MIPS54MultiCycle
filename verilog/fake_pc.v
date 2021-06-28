@@ -9,7 +9,7 @@ module fake_PC (
     
     always @(posedge clk or posedge reset) begin
         if (reset) begin
-            fake_pc_out <= 32'h00000000;
+            fake_pc_out <= 32'h00400000;
         end
         else if (we) begin
             fake_pc_out <= fake_pc_in;

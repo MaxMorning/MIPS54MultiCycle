@@ -12,8 +12,6 @@ module CPU (
     // RAM
     output wire cpu_ram_we,
     output wire[31:0] cpu_ram_addr,
-    output wire[1:0] cpu_ram_mask,
-    output wire cpu_ram_signed_ext,
     output wire[31:0] cpu_ram_wdata,
 
     // CP0
@@ -92,6 +90,13 @@ module CPU (
     wire[31:0] multResultHi;
     wire[31:0] multResultLo;
 
+    // RamProc
+    wire[1:0] ctrl_ram_mask;
+    wire cpu_ram_signed_ext;
+
+    wire[31:0] ram_store_data_out;
+    wire[31:0] ram_load_data_out;
+
     // select
     wire ram_addr_select;
     wire[1:0] alu_opr1_select;
@@ -110,11 +115,11 @@ module CPU (
 
     assign cpu_cp0_rst = reset;
     assign cpu_cp0_pc = pc_pc_out;
-    assign cpu_cp0_rd = ir_ir_out[15:10];
+    assign cpu_cp0_rd = ir_ir_out[15:11];
     assign cpu_cp0_wdata = gpr_rdata2;
     
     assign cpu_ram_addr = ram_addr_select ? alu_result: pc_pc_out;
-    assign cpu_ram_wdata = gpr_rdata2;
+    assign cpu_ram_wdata = ram_store_data_out;
 
     assign alu_opr1 = alu_opr1_select[1] ? 
                         (alu_opr1_select[0] ? 32'h0: gpr_rdata2)
@@ -149,7 +154,7 @@ module CPU (
                             (gpr_wdata_select[1] ? 
                                 (gpr_wdata_select[0] ? cp0_cpu_rdata: pc_pc_out)
                                 :
-                                (gpr_wdata_select[0] ? ram_cpu_rdata: alu_result)
+                                (gpr_wdata_select[0] ? ram_load_data_out: alu_result)
                             );
 
     assign hi_wdata = hi_reg_wdata_select[1] ?
@@ -202,7 +207,7 @@ module CPU (
         .div_ctrl_done(div_div_done),
 
         .ctrl_ram_we(cpu_ram_we),
-        .ctrl_ram_mask(cpu_ram_mask),
+        .ctrl_ram_mask(ctrl_ram_mask),
         .ctrl_bad_addr(ctrl_bad_addr),
         .ctrl_alu_ALUcontrol(ctrl_alu_control),
         .ctrl_pc_we(ctrl_pc_we),
@@ -302,5 +307,21 @@ module CPU (
         .wdata(gpr_wdata),
         .rdata1(gpr_rdata1),
         .rdata2(gpr_rdata2)
+    );
+
+    RamStoreProc RamStoreProc_inst(
+        .ram_data_in(ram_cpu_rdata),
+        .gpr_data_in(gpr_rdata2),
+        .addr(alu_result[1:0]),
+        .mask(ctrl_ram_mask),
+        .data_out(ram_store_data_out)
+    );
+
+    RamLoadProc RamLoadProc_inst(
+        .ram_data_in(ram_cpu_rdata),
+        .addr(alu_result[1:0]),
+        .mask(ctrl_ram_mask),
+        .signed_ext(cpu_ram_signed_ext),
+        .data_out(ram_load_data_out)
     );
 endmodule

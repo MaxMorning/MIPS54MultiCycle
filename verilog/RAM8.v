@@ -13,7 +13,7 @@ module RAM8 (
     wire[31:0] ori_rdata;
     wire[31:0] final_wdata;
 
-    mem8 mem8_inst3(
+    mem8_3 mem8_inst3(
         .clk(clk),
         .we(mask4[3] & we),
         .a(addr[12:2]),
@@ -22,7 +22,7 @@ module RAM8 (
         .dpo(ori_rdata[31:24])
     );
 
-    mem8 mem8_inst2(
+    mem8_2 mem8_inst2(
         .clk(clk),
         .we(mask4[2] & we),
         .a(addr[12:2]),
@@ -31,7 +31,7 @@ module RAM8 (
         .dpo(ori_rdata[23:16])
     );
 
-    mem8 mem8_inst1(
+    mem8_1 mem8_inst1(
         .clk(clk),
         .we(mask4[1] & we),
         .a(addr[12:2]),
@@ -40,7 +40,7 @@ module RAM8 (
         .dpo(ori_rdata[15:8])
     );
 
-    mem8 mem8_inst0(
+    mem8_0 mem8_inst0(
         .clk(clk),
         .we(mask4[0] & we),
         .a(addr[12:2]),

@@ -9,7 +9,7 @@ module PC (
     
     always @(posedge clk or posedge reset) begin
         if (reset) begin
-            pc_out <= 32'h00000000;
+            pc_out <= 32'h00400000;
         end
         else if (we) begin
             pc_out <= pc_in;
