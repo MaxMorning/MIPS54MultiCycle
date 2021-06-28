@@ -5,6 +5,7 @@ module soc_tb();
     wire[31:0] inst;
     wire[31:0] pc;
     reg[31:0] prev_pc;
+    reg[31:0] prev_inst;
 
     integer fout;
     integer i;
@@ -51,21 +52,23 @@ module soc_tb();
         fout = $fopen("G:/FTP/TransTemp/MIPS54/WORKSPACE/result.txt", "w+");
         reset = 1;
 
-        prev_instr = 32'h0;
+        prev_pc = 32'h0;
+        prev_inst = 32'h0;
         #6
         reset = 0;
 
         #6;
         forever begin
             if (prev_pc != pc) begin
-                $fdisplay(fout, "pc: %h", pc);
-                $fdisplay(fout, "instr: %h", inst);
+                $fdisplay(fout, "pc: %h", prev_pc);
+                $fdisplay(fout, "instr: %h", prev_inst);
 
                 for (i = 0; i < 32; i = i + 1) begin
                     $fdisplay(fout, "regfile%d: %h", i, soc_inst.sccpu.cpu_ref.array_reg[i]);
                 end
 
                 prev_pc = pc;
+                prev_inst = inst;
             end
             
             #10;
