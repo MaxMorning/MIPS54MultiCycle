@@ -15,12 +15,12 @@ module RAM (
     // assign addr_2 = addr + 2;
     // assign addr_3 = addr + 3;
 
-    assign rdata = mem[{addr[27], addr[12:2]}];
+    assign rdata = mem[{addr[28], addr[12:2]}];
 
 
     always @(posedge clk) begin
         if (we) begin
-            mem[{addr[27], addr[12:2]}] <= wdata;
+            mem[{addr[28], addr[12:2]}] <= wdata;
         end
     end
 endmodule
