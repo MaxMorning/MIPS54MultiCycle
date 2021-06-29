@@ -36,7 +36,7 @@ module CP0 (
                 reg_file[12][0] <= 1'b0;
                 reg_file[13][6:2] <= cause;
                 reg_file[14] <= pc;
-                exc_addr <= 32'h4;
+                exc_addr <= 32'h00400004;
             end
             else begin
                 exc_addr <= pc;

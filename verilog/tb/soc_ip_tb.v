@@ -60,8 +60,8 @@ module soc_tb();
         #6;
         forever begin
             if (prev_pc != pc) begin
-                $fdisplay(fout, "pc: %h", prev_pc);
-                $fdisplay(fout, "instr: %h", prev_inst);
+                $fdisplay(fout, "pc: %h", pc);
+                $fdisplay(fout, "instr: %h", inst);
 
                 for (i = 0; i < 32; i = i + 1) begin
                     $fdisplay(fout, "regfile%d: %h", i, soc_inst.sccpu.cpu_ref.array_reg[i]);

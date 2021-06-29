@@ -119,7 +119,7 @@ module Controller (
 
     always @(posedge clk or posedge reset) begin
         if (reset) begin
-            status_reg <= sInit;
+            status_reg <= sFetch;
         end
         else begin
             case (status_reg)
