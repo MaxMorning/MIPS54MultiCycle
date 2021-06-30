@@ -1051,7 +1051,7 @@ module Controller (
             sJALR:
                 begin
                     ram_we <= 0;
-                    pc_we <= 1;
+                    pc_we <= ~(& ir_ctrl_instr[15:11]);
                     ir_we <= 0;
                     gpr_we <= 1;
                     immext_select <= 2'bxx;
