@@ -261,6 +261,7 @@ module CPU (
     IR ir_inst(
         .clk(clk),
         .we(ctrl_ir_we),
+        .reset(reset),
         .ir_in(ram_cpu_rdata),
         .ir_out(ir_ir_out)
     );

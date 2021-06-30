@@ -28,11 +28,11 @@ module CP0 (
                 if (i != 12)
                     reg_file[i] <= 32'h0;
                 else
-                    reg_file[12] <= 32'h1;
+                    reg_file[12] <= 32'hf;
             end
         end
         else if (exception) begin
-            if (reg_file[12][0] && ~reg_file[12][{3'b010, cause[2], cause[2] ^ cause[0]}]) begin
+            if (reg_file[12][0] && reg_file[12][{3'b000, cause[0], cause[2]}]) begin
                 reg_file[12][0] <= 1'b0;
                 reg_file[13][6:2] <= cause;
                 reg_file[14] <= pc;

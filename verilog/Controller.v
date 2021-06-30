@@ -1455,8 +1455,8 @@ module Controller (
                     cp0_cause <= 5'b01101;
 
                     addr_select <= ir_ctrl_instr[31] & ~ctrl_bad_addr;
-                    opr1_select <= 2'bxx;
-                    opr2_select <= 2'bxx;
+                    opr1_select <= alu_opr1_select_gpr_rdata1;
+                    opr2_select <= alu_opr2_select_gpr_rdata2;
                     pc_in_select <= 3'bxxx;
                     reg_gpr_waddr_select <= 2'bxx;
                     reg_gpr_wdata_select <= 3'bxxx;
