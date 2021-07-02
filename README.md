@@ -1,6 +1,10 @@
 # MIPS54MultiCycle
 A MIPS CPU without pipeline that support 54 basic instructions  
-__Internal Code__ : Beryllium
+__Internal Code__ : Beryllium  
+__Speed Test__ :   
+
+    Programmed @ Xilinx Artix-7 28nm
+    Top Speed @ 92 MHz
 ## Module Define
 ### RAM
     input wire clk, // Src : clk  
