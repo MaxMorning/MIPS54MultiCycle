@@ -21,8 +21,8 @@ module RegFile (
                 array_reg[i] <= 32'h0;
             end
         end
-        else if (we) begin
-            array_reg[waddr] <= {32{| waddr}} & wdata;
+        else if (we && {32{| waddr}}) begin
+            array_reg[waddr] <= wdata;
         end
     end
 endmodule

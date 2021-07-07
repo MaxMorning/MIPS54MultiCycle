@@ -1,5 +1,6 @@
 module sccomp_dataflow (
     input wire clk_in,
+    input wire clk_div,
     input wire reset,
 
     output wire[31:0] inst,
@@ -39,6 +40,7 @@ module sccomp_dataflow (
 
     CPU sccpu(
         .clk(clk_in),
+        .clk_div(clk_div),
         .reset(reset),
         .ram_cpu_rdata(ram_cpu_rdata),
         .cp0_cpu_rdata(cp0_cpu_rdata),

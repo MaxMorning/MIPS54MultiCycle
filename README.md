@@ -4,7 +4,7 @@ __Internal Code__ : Beryllium
 __Speed Test__ :   
 
     Programmed @ Xilinx Artix-7 28nm
-    Top Speed @ 92 MHz
+    Top Speed @ 96 MHz
 ## Module Define
 ### RAM
     input wire clk, // Src : clk  

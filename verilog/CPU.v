@@ -1,5 +1,6 @@
 module CPU (
     input wire clk,
+    input wire clk_div,
     input wire reset,
     // RAM
     input wire[31:0] ram_cpu_rdata,
@@ -234,7 +235,7 @@ module CPU (
     );
 
     divCalculate divCalculate_inst(
-        .clk(clk),
+        .clk(clk_div),
         .start(ctrl_div_start),
         .signed_div(~ir_ir_out[0]),
         .dividend(gpr_rdata1),
